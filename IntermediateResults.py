@@ -54,8 +54,10 @@ def GetIntermediateResults(Phases, Teams):
         TotalEvaluationAccuracy = []
         TotalTrainingCost = []
         TotalTrainingAccuracy = []
+        Current_nr_teams = 0
         for team in Teams:
             if team.PlaysPhase(phaseToPredict):
+                Current_nr_teams += 1
                 # print("Phase " + phaseToPredict + " , Team " + team.Name + " training started.")
                 trainingInput, trainingOutput = team.TrainingData(phaseToPredict)
                 evaluationInput, evaluationOutput = team.EvaluationData(phaseToPredict)
@@ -133,8 +135,8 @@ def GetIntermediateResults(Phases, Teams):
         DrawStats(
             phaseToPredict,
             TotalTrainingCost,
-            [x / 32 for x in TotalTrainingAccuracy],
+            [x / Current_nr_teams for x in TotalTrainingAccuracy],
             TotalEvaluationCost,
-            [x / 32 for x in TotalEvaluationAccuracy],
+            [x / Current_nr_teams for x in TotalEvaluationAccuracy],
         )
         print("Phase " + phaseToPredict + " training completed.")
