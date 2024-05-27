@@ -1,12 +1,15 @@
 import DataLoader
-import TeamClass
-import IntermediateResults
+import PredictByTeam
+import PredictByGame
+import PredictByTournament
 
 def main():
-    Games, TeamNames, Phases = DataLoader.ReadData("Fifa2022Scores.xlsx")
-    Teams = TeamClass.SeparateGamesByTeam(TeamNames, Games)
-    IntermediateResults.GetIntermediateResults(Phases, Teams)
+    Games, Teams, TeamNames, Phases = DataLoader.read_data("Fifa2022Scores.xlsx")
+    
+    predictor = PredictByTeam.PredictByTeam()
+    # predictor = PredictByGame.PredictByGame()
+    # predictor = PredictByTournament.PredictByTournament()
 
-    # print(numpy.around(DataLoader.NormalizedLogisticVectorizedResult(5), decimals=3))
+    predictor.get_results(Phases, Teams)
 
 main()

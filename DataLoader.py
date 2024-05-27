@@ -1,62 +1,78 @@
 import pandas
 import GameClass
+import TeamClass
 
 
-def ReadData(fileName):
+def read_data(fileName):
     # read data from excel file, need to use this syntax to read specific sheet
-    Fifa2022Scores = pandas.read_excel(fileName, sheet_name=["StatsNormalized"])
-    Fifa2022Scores = Fifa2022Scores.get("StatsNormalized").values.tolist()
+    fifa2022_scores = pandas.read_excel(fileName, sheet_name=["StatsNormalized"])
+    fifa2022_scores = fifa2022_scores.get("StatsNormalized").values.tolist()
 
     # sort stats according to half
-    Half1 = Fifa2022Scores[0::4]
-    Half2 = Fifa2022Scores[1::4]
-    ExtraTime = Fifa2022Scores[2::4]
-    Penalties = Fifa2022Scores[3::4]
+    half1 = fifa2022_scores[0::4]
+    half2 = fifa2022_scores[1::4]
+    extra_time = fifa2022_scores[2::4]
+    penalties = fifa2022_scores[3::4]
 
     # create game list
-    Games = []
-    for (h1, h2, e, p) in zip(Half1, Half2, ExtraTime, Penalties):
-        Games.append(GameClass.Game(h1, h2, e, p))
+    games = []
+    for (h1, h2, e, p) in zip(half1, half2, extra_time, penalties):
+        games.append(GameClass.Game(h1, h2, e, p))
 
     # get phase names and team names from game list
-    TeamNames = set([])
-    Phases = set([])
-    for game in Games:
-        Phases.add(game.Phase)
-        TeamNames.add(game.Team1)
-        TeamNames.add(game.Team2)
+    team_names = set([])
+    phases = set([])
+    for game in games:
+        phases.add(game.phase)
+        team_names.add(game.team1_name)
+        team_names.add(game.team2_name)
 
-    TeamNames = list(TeamNames)
-    TeamNames.sort()
-    Phases = list(Phases)
-    Phases.sort()
-    return CheckData(Games, TeamNames, Phases)
+    team_names = list(team_names)
+    team_names.sort()
+    phases = list(phases)
+    phases.sort()
+
+    # create teams
+    teams = []
+    for team in team_names:
+        team_games = []
+        for game in filter(lambda x: x.team1_name == team or x.team2_name == team, games):
+            team_games.append(game)
+            if team_games[-1].team2_name == team:
+                team_games[-1].reverse_teams()
+        teams.append(TeamClass.Team(team, team_games))
+
+    # add references
+    for game in games:
+        game.add_team_reference(teams)
+
+    return check_data(games, teams, team_names, phases)
 
 
-def CheckData(Games, TeamNames, Phases):
-    team_stats_length = len(Games[0].Stats1)
+def check_data(games, teams, team_names, phases):
+    team_stats_length = len(games[0].team1_stats)
     team_score_length = 40 # this is constant
 
-    for game in Games:
-        assert len(game.Stats1) == team_stats_length, "Invalid shape %d, expected %d, for Stats1 of game %s" % (
-            len(game.Stats1),
+    for game in games:
+        assert len(game.team1_stats) == team_stats_length, "Invalid shape %d, expected %d, for team1_stats of game %s" % (
+            len(game.team1_stats),
             team_stats_length,
-            game.Phase + game.Team1 + game.Team2,
+            game.print(),
         )
-        assert len(game.Stats2) == team_stats_length, "Invalid shape %d, expected %d, for Stats2 of game %s" % (
-            len(game.Stats2),
+        assert len(game.team2_stats) == team_stats_length, "Invalid shape %d, expected %d, for team2_stats of game %s" % (
+            len(game.team2_stats),
             team_stats_length,
-            game.Phase + game.Team1 + game.Team2,
+            game.print(),
         )
-        assert len(game.Output1) == team_score_length, "Invalid shape %d, expected %d, for Stats2 of game %s" % (
-            len(game.Output1),
+        assert len(game.team1_output) == team_score_length, "Invalid shape %d, expected %d, for team1_output of game %s" % (
+            len(game.team1_output),
             team_score_length,
-            game.Phase + game.Team1 + game.Team2,
+            game.print(),
         )
-        assert len(game.Output2) == team_score_length, "Invalid shape %d, expected %d, for Stats2 of game %s" % (
-            len(game.Output2),
+        assert len(game.team2_output) == team_score_length, "Invalid shape %d, expected %d, for team2_output of game %s" % (
+            len(game.team2_output),
             team_score_length,
-            game.Phase + game.Team1 + game.Team2,
+            game.print(),
         )
 
-    return (Games, TeamNames, Phases)
+    return (games, teams, team_names, phases)

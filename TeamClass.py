@@ -1,47 +1,29 @@
-
-def SeparateGamesByTeam(TeamNames, Games):
-    Teams = []
-    for team in TeamNames:
-        TeamGames = []
-        for game in filter(lambda x: x.Team1 == team or x.Team2 == team, Games):
-            TeamGames.append(game)
-            if TeamGames[-1].Team2 == team:
-                TeamGames[-1].ReverseTeams()
-        Teams.append(Team(team, TeamGames))
-    return Teams
+import numpy
+import statistics
 
 
 class Team:
-    def __init__(self, name, teamGames):
-        self.Name = name
-        self.TeamGames = teamGames
-        self.TrainedParameters = []
+    def __init__(self, name, team_games):
+        self.name = name
+        self.team_games = team_games
 
-    def TrainingData(self, phase):
-        trainingInput = []
-        trainingOutput = []
-        for game in self.TeamGames:
-            if game.Phase < phase:
-                trainingInput.append(game.GenerateInput())
-                trainingOutput.append(game.GenerateOutput())
-        return (trainingInput, trainingOutput)
-
-    def EvaluationData(self, phase):
-        evaluationInput = []
-        evaluationOutput = []
-        for game in self.TeamGames:
-            if game.Phase == phase:
-                evaluationInput.append(game.GenerateInput())
-                evaluationOutput.append(game.GenerateOutput())
-        return (evaluationInput, evaluationOutput)
-
-    def PrintScores(self):
-        for game in self.TeamGames:
-            game.PrintScore()
-
-    def PlaysPhase(self, phase):
-        for game in self.TeamGames:
-            if phase <= game.Phase:
+    def plays_phase(self, phase):
+        for game in self.team_games:
+            if phase <= game.phase:
                 return True
         return False
+    
+    def get_team_stats(self, phase):
+        # get all the stats
+        values = []
+        for game in self.team_games:
+            if game.phase < phase:
+                values.append(numpy.vstack(game.generate_input() + game.generate_output()))
+        # transpose stats
+        transposed = list(zip(*values))
+        # compute averages
+        averages = [sum(column) / len(column) for column in transposed]
+        standard_deviations = [statistics.stdev(column) for column in transposed]
+
+        return (averages, standard_deviations)
     

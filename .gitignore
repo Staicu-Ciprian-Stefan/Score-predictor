@@ -1,2 +1,14 @@
 .vscode/
 __pychache__/
+__pycache__/DataLoader.cpython-311.pyc
+__pycache__/FinalResults.cpython-311.pyc
+__pycache__/GameClass.cpython-311.pyc
+__pycache__/IntermediateResults.cpython-311.pyc
+__pycache__/Network2.cpython-311.pyc
+__pycache__/PredictByGame.cpython-311.pyc
+__pycache__/PredictByTeam.cpython-311.pyc
+__pycache__/PredictByTournament.cpython-311.pyc
+__pycache__/TeamClass.cpython-311.pyc
+__pycache__/VectorizationTools.cpython-311.pyc
+__pycache__/GeneralPredictions.cpython-311.pyc
+__pycache__/GeneralPredictor.cpython-311.pyc
