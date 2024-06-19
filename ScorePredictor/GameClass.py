@@ -2,6 +2,15 @@ import VectorizationTools
 
 class Game:
     # format must be kept with team12, score12, stats12 for reverse purposes
+    def get_input(self):
+        return self.team1_stats + self.team2_stats
+    
+    def get_output(self):
+        return self.team1_output + self.team2_output
+
+    def get_csv_format(self):
+        return [self.phase, self.team1_name, self.team2_name] + self.team1_score + self.team2_score
+    
     def __init__(self, half1, half2, extra, penalties):
         self.team1 = -1
         self.team2 = -1
@@ -31,6 +40,9 @@ class Game:
 
         # on penalties score is the only info
 
+        self.team1_score = [half1[4], half2[4], extra[4], penalties[4]]
+        self.team2_score = [half1[5], half2[5], extra[5], penalties[5]]
+
         self.team1_output = VectorizationTools.VectorizationMethod(half1[4])
         self.team2_output = VectorizationTools.VectorizationMethod(half1[5])
         self.team1_output.extend(VectorizationTools.VectorizationMethod(half2[4]))
@@ -56,4 +68,4 @@ class Game:
         self.team2_score = placeholder
 
     def print(self):
-        print(self.phase, " ", self.team1_name, " - ", self.team2_name)
+        return "(" + self.phase + " " + self.team1_name + "-" + self.team2_name + ")"

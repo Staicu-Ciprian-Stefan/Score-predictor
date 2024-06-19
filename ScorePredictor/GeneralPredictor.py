@@ -6,64 +6,68 @@ import Network2
 class GeneralPredictor:
     def __init__(self):
         # can't initialize data here because multiple networks are used for each type of prediction
+        self._reset_total_cost_accuracy()
+    
+    def _reset_total_cost_accuracy(self):
         self.total_training_cost = []
         self.total_training_accuracy = []
         self.total_evaluation_cost = []
         self.total_evaluation_accuracy = []
-    
-    def get_network_input_size(self):
+
+    def _get_network_input_size(self):
         raise NotImplementedError
     
-    def get_network_output_size(self):
+    def _get_network_output_size(self):
         raise NotImplementedError
    
-    def get_results():
+    def train():
         raise NotImplementedError
+    
+    def _general_check(self, my_list, expected_size, text):
+        assert (my_list.shape[0] == expected_size
+        ), "Invalid shape %d, expected %d for %s " % (
+            my_list[0].shape[0],
+            expected_size,
+            text
+        )
+        assert (my_list.shape[1] == 1
+        ), "Invalid shape %d, expected %d for %s " % (
+            my_list[0].shape[1],
+            1,
+            text
+        )
 
-    def network_wrapper(self, training_input, training_output, evaluation_input, evaluation_output):
+    def _general_final_check(self, my_list, expected_size, text):
+        assert (my_list[0].shape[0] == expected_size
+        ), "Invalid shape %d, expected %d for %s " % (
+            my_list[0].shape[0],
+            expected_size,
+            text
+        )
+        assert (my_list[0].shape[1] == 1
+        ), "Invalid shape %d, expected %d for %s " % (
+            my_list[0].shape[1],
+            1,
+            text
+        )
+
+    def get_results(self, teams, games):
+        output = []
+        for team in teams:
+            for game in team.team_games:
+                x = 0
+                # output.append()
+        return output
+
+    def _training_wrapper(self, training_input, training_output, evaluation_input, evaluation_output):
         # make checks
-        assert (training_input[0].shape[0] == self.get_network_input_size()
-        ), "Invalid shape %d, expected %d for network training input final check" % (
-            training_input[0].shape[0],
-            self.get_network_input_size(),
-        )
-        assert (training_input[0].shape[1] == 1
-        ), "Invalid shape %d, expected %d for network training input final check" % (
-            training_input[0].shape[1],
-            1,
-        )
-        assert (training_output[0].shape[0] == self.get_network_output_size()
-        ), "Invalid shape %d, expected %d for network training output final check" % (
-            training_output[0].shape[0],
-            80,
-        )
-        assert (training_output[0].shape[1] == 1
-        ), "Invalid shape %d, expected %d for network training output final check" % (
-            training_output[0].shape[1],
-            1,
-        )
-        assert (evaluation_input[0].shape[0] == self.get_network_input_size()
-        ), "Invalid shape %d, expected %d for network evaluation input final check" % (
-            evaluation_input[0].shape[0],
-            self.get_network_input_size()
-        )
-        assert (evaluation_input[0].shape[1] == 1
-        ), "Invalid shape %d, expected %d for network evaluation input final check" % (
-            evaluation_input[0].shape[1],
-            1,
-        )
-        assert (evaluation_output[0].shape[0] == self.get_network_output_size()
-        ), "Invalid shape %d, expected %d for network evaluation output final check" % (
-            evaluation_output[0].shape[0],
-            self.get_network_output_size()
-        )
-        assert (evaluation_output[0].shape[1] == 1
-        ), "Invalid shape %d, expected %d for network evaluation output final check" % (
-            evaluation_output[0].shape[1],
-            1
-        )
+        self._general_final_check(training_input, self._get_network_input_size(), "training input final check")
+        self._general_final_check(training_output, self._get_network_output_size(), "training output final check")
+        self._general_final_check(evaluation_input, self._get_network_input_size(), "evaluation input final check")
+        self._general_final_check(evaluation_output, self._get_network_output_size(), "evaluation output final check")
+        
         # define network
-        net = Network2.Network([self.get_network_input_size(), self.get_network_output_size()], cost = Network2.CrossEntropyCost)
+        net = Network2.Network([self._get_network_input_size(), self._get_network_output_size()], cost = Network2.CrossEntropyCost)
         (
             evaluation_cost,
             evaluation_accuracy,
@@ -107,7 +111,7 @@ class GeneralPredictor:
         return (evaluation_cost, evaluation_accuracy, training_cost, training_accuracy)
         
 
-    def draw_stats(self, phase):
+    def _draw_stats(self, phase):
         fig = plt.figure()
         fig.suptitle(phase + ' stats', fontsize = 16)
         training_cost_graph = fig.add_subplot(221)
@@ -121,7 +125,7 @@ class GeneralPredictor:
 
         training_accuracy_graph = fig.add_subplot(222)
         training_accuracy_graph.plot(self.total_training_accuracy)
-        training_accuracy_graph.set_ylim(bottom = 0, top = 1)
+        training_accuracy_graph.set_ylim(bottom = 0, top = 100)
         training_accuracy_graph.set_xlim(left = 0)
         training_accuracy_graph.grid(True)
         # tc.set_xlabel("Epoch")
@@ -139,7 +143,7 @@ class GeneralPredictor:
 
         evaluation_accuracy_graph = fig.add_subplot(224)
         evaluation_accuracy_graph.plot(self.total_evaluation_accuracy)
-        evaluation_accuracy_graph.set_ylim(bottom = 0, top = 1)
+        evaluation_accuracy_graph.set_ylim(bottom = 0, top = 100)
         evaluation_accuracy_graph.set_xlim(left = 0)
         evaluation_accuracy_graph.grid(True)
         evaluation_accuracy_graph.set_xlabel("Epoch")
@@ -147,6 +151,3 @@ class GeneralPredictor:
         evaluation_accuracy_graph.set_title("Evaluation Accuracy")
 
         plt.show()
-
-    def PrintStats(self, phases, teams):
-        raise NotImplementedError
