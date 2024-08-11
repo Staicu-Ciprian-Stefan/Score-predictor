@@ -9,6 +9,9 @@ ScorePredictor/__pycache__/PredictByGame.cpython-311.pyc
 ScorePredictor/__pycache__/PredictByTeam.cpython-311.pyc
 ScorePredictor/__pycache__/PredictByTournament.cpython-311.pyc
 ScorePredictor/__pycache__/TeamClass.cpython-311.pyc
-ScorePredictor/__pycache__/VectorizationTools.cpython-311.pyc
 ScorePredictor/__pycache__/GeneralPredictions.cpython-311.pyc
 ScorePredictor/__pycache__/GeneralPredictor.cpython-311.pyc
+ScorePredictor/__pycache__/NetworkTools.cpython-311.pyc
+ScorePredictor/__pycache__/GlobalParameters.cpython-311.pyc
+ScorePredictor/WebScrapper.txt
+ScorePredictor/__pycache__/Main.cpython-311.pyc

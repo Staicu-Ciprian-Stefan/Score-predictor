@@ -1,23 +1,35 @@
+# standard libraries
+
+# 3rd party libraries
+import pandas as pd
+
+# my libraries
 import DataLoader
 import PredictByTeam
 import PredictByGame
 import PredictByTournament
 
-import pandas as pd
-
 def main():
-    games, teams, team_names, phases = DataLoader.read_data("Fifa2022Scores.xlsx")
+    # parameters
+    file_name = 'CountryTournamentHistory.xlsx'
+    # file_name = 'ClubTournamentHistory.xlsx'
+    # sheet_name = 'Fifa2018' 
+    # sheet_name = 'Fifa2022'
+    sheet_name = 'Euro2024'
+
+    (phases, team_names, games, teams) = DataLoader.read_data(file_name, sheet_name)
     
-    predictor = PredictByTeam.PredictByTeam()
-    # predictor = PredictByGame.PredictByGame()
+    # (input_size, output_size) = (34, 80)
+    # (input_size, output_size) = (108, 80)
+    # (input_size, output_size) = (158, 80)
+
+    # predictor = PredictByTeam.PredictByTeam(input_size, output_size)
+    predictor = PredictByGame.PredictByGame()
     # predictor = PredictByTournament.PredictByTournament()
 
-    predictor.train(phases, teams, games)
-    results = predictor.get_results(teams, games)
-
-    columns = ['Phase', 'Team1', 'Team2', 'T1_r1', 'T1_final', 'T1_extra', 'T1_penalties', 'T2_r1', 'T2_final', 'T2_extra', 'T2_penalties']
-    df = pd.DataFrame([game.get_csv_format() for game in games], columns = columns)
-    df.to_csv("Output.csv", index = False)
-
+    predictor.debug_train(phases, teams, games)
+    # predictor.train(phases, teams, games)
+    predictor.get_results_debug(phases, games)
+    # predictor.get_results(phases, games)
 
 main()

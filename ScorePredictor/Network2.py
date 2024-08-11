@@ -21,7 +21,7 @@ import sys
 import numpy as np
 
 # my libraries
-import VectorizationTools
+import NetworkTools
 
 #### Define the quadratic and cross-entropy cost functions
 
@@ -52,7 +52,8 @@ class CrossEntropyCost(object):
         to the correct value (0.0).
 
         """
-        return np.sum(np.nan_to_num(-y * np.log(a) - (1 - y) * np.log(1 - a)))
+        # return np.sum(np.nan_to_num(-y * np.log(a) - (1 - y) * np.log(1 - a)))
+        return np.sum(np.nan_to_num(-y * np.log(a + 0.000001) - (1 - y) * np.log(1 - a * 0.999999)))
 
     @staticmethod
     def delta(z, a, y):
@@ -176,16 +177,13 @@ class Network(object):
     def SGD(
         self,
         training_data,
-        epochs,
+        max_epochs,
         mini_batch_size,
         eta,
-        lmbda=0.0,
-        evaluation_data=None,
-        monitor_evaluation_cost=False,
-        monitor_evaluation_accuracy=False,
-        monitor_training_cost=False,
-        monitor_training_accuracy=False,
-        early_stopping_n=0,
+        lmbda = 0.0,
+        evaluation_data = None,
+        eta_change_interval = 10,
+        eta_change_factor = 0.5
     ):
         """Train the neural network using mini-batch stochastic gradient
         descent.  The ``training_data`` is a list of tuples ``(x, y)``
@@ -204,11 +202,7 @@ class Network(object):
         will be a 30-element list containing the cost on the
         evaluation data at the end of each epoch. Note that the lists
         are empty if the corresponding flag is not set.
-
         """
-
-        # early stopping functionality:
-        best_accuracy = 1
 
         training_data = list(training_data)
         n = len(training_data)
@@ -219,11 +213,16 @@ class Network(object):
 
         # early stopping functionality:
         best_accuracy = 0
-        no_accuracy_change = 0
+        prev_eta_best_accuracy = 0
+        best_accuracy_nr_epochs = 0
+        current_epoch = 0
 
         evaluation_cost, evaluation_accuracy = [], []
         training_cost, training_accuracy = [], []
-        for j in range(epochs):
+        while current_epoch <= max_epochs and best_accuracy_nr_epochs < eta_change_interval + 1:
+            current_epoch += 1
+
+
             random.shuffle(training_data)
             mini_batches = [
                 training_data[k : k + mini_batch_size]
@@ -234,33 +233,36 @@ class Network(object):
 
             # print("Epoch %s training complete" % j)
 
-            if monitor_training_cost:
-                cost = self.total_cost(training_data, lmbda)
-                training_cost.append(cost)
-                # print("Cost on training data: {}".format(cost))
-            if monitor_training_accuracy:
-                accuracy = self.accuracy(training_data)
-                training_accuracy.append(accuracy)
-                # print("Accuracy on training data: {} / {}".format(accuracy, 1))  # n instead of 1
-            if monitor_evaluation_cost:
-                cost = self.total_cost(evaluation_data, lmbda)
-                evaluation_cost.append(cost)
-                # print("Cost on evaluation data: {}".format(cost))
-            if monitor_evaluation_accuracy:
-                accuracy = self.accuracy(evaluation_data)
-                evaluation_accuracy.append(accuracy)
-                # print("Accuracy on evaluation data: {} / {}".format(self.accuracy(evaluation_data), 1))  # n_data instead of 1
+            cost = self.total_cost(training_data, lmbda)
+            training_cost.append(cost)
+            # print("Cost on training data: {}".format(cost))
+
+            accuracy = self.accuracy(training_data)
+            training_accuracy.append(accuracy)
+            # print("Accuracy on training data: {} / {}".format(accuracy, 1))  # n instead of 1
+            
+            cost = self.total_cost(evaluation_data, lmbda)
+            evaluation_cost.append(cost)
+            # print("Cost on evaluation data: {}".format(cost))
+            
+            accuracy = self.accuracy(evaluation_data)
+            evaluation_accuracy.append(accuracy)
+            # print("Accuracy on evaluation data: {} / {}".format(self.accuracy(evaluation_data), 1))  # n_data instead of 1
 
             # Early stopping:
-            if early_stopping_n > 0:
-                if accuracy > best_accuracy:
-                    best_accuracy = accuracy
-                    no_accuracy_change = 0
-                    # print("Early-stopping: Best so far {}".format(best_accuracy))
-                else:
-                    no_accuracy_change += 1
+            if accuracy > best_accuracy:
+                best_accuracy = accuracy
+                best_accuracy_nr_epochs = 0
+                # print("Early-stopping: Best so far {}".format(best_accuracy))
+            else:
+                best_accuracy_nr_epochs += 1
 
-                if no_accuracy_change == early_stopping_n:
+            if best_accuracy_nr_epochs == eta_change_interval + 1:
+                if prev_eta_best_accuracy < best_accuracy:
+                    prev_eta_best_accuracy = best_accuracy
+                    best_accuracy_nr_epochs = 0
+                    eta = eta * eta_change_factor
+                else:
                     # print("Early-stopping: No accuracy change in last epochs: {}".format(early_stopping_n))
                     return (
                         evaluation_cost,
@@ -396,7 +398,7 @@ class Network(object):
         for x, y in data:
             a = self.feedforward(x)
             if convert:
-                y = VectorizationTools.VectorizationMethod(y)
+                y = NetworkTools.vectorized_result(y)
             cost += self.cost.fn(a, y) / len(data)
             cost += (
                 0.5

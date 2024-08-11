@@ -1,5 +1,10 @@
-import numpy
+# standard libraries
+
+# 3rd party libraries
 import statistics
+
+# my libraries
+
 
 class Team:
     def __init__(self, name, team_games):
@@ -15,12 +20,13 @@ class Team:
                 return True
         return False
     
-    def get_stats(self, phase):
-        # get all the stats
+    def get_stats(self, phase = None):
+        # get stats from all games < phase
         values = []
         for game in self.team_games:
-            if game.phase < phase:
-                values.append(game.get_input() + game.get_output())
+            if game.is_played:
+                if phase == None or game.phase < phase:
+                    values.append(game.get_stats())
         # transpose stats
         transposed = list(zip(*values))
         # compute averages and standard deviations
@@ -32,5 +38,5 @@ class Team:
             standard_deviations = [0] * len(transposed)
 
         # format result as numpy array
-        result = numpy.array(averages + standard_deviations)
+        result = averages + standard_deviations
         return result

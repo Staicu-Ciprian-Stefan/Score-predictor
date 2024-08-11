@@ -1,71 +1,90 @@
-import VectorizationTools
+# standard libraries
+import math
+import pandas
+
+# 3rd party libraries
+
+# my libraries
+import NetworkTools
 
 class Game:
     # format must be kept with team12, score12, stats12 for reverse purposes
-    def get_input(self):
-        return self.team1_stats + self.team2_stats
+    def get_stats(self):
+        return self.team1_stats + self.team2_stats + self.team1_output + self.team2_output
+        
+    def get_input(self, phase = None):
+        return self.team1.get_stats(phase) + self.team1.get_stats(phase)
     
     def get_output(self):
         return self.team1_output + self.team2_output
 
     def get_csv_format(self):
-        return [self.phase, self.team1_name, self.team2_name] + self.team1_score + self.team2_score
+        return [self.phase, self.team1_name, self.team2_name]
     
-    def __init__(self, half1, half2, extra, penalties):
+    def __init__(self, raw_data_line):
         self.team1 = -1
         self.team2 = -1
-        self.phase = half1[0]
-        self.team1_name = half1[1]
-        self.team2_name = half1[2]
-        # 3 is the comment signaling if it is half1, half2, extra or penalties
-        self.team1_score = [
-            half1[4],
-            half2[4],
-            extra[4],
-            penalties[4],
-        ]
-        self.team2_score = [
-            half1[5],
-            half2[5],
-            extra[5],
-            penalties[5],
-        ]
+        self.phase = raw_data_line[0]
+        self.team1_name = raw_data_line[1]
+        self.team2_name = raw_data_line[2]
+        
+        self.team1_score = raw_data_line[3:10:2]
+        self.team2_score = raw_data_line[4:11:2]
 
-        self.team1_stats = half1[6::2]
-        self.team2_stats = half1[7::2]
-        self.team1_stats.extend(half2[6::2])
-        self.team2_stats.extend(half2[7::2])
-        self.team1_stats.extend(extra[6::2])
-        self.team2_stats.extend(extra[7::2])
+        self.team1_stats = raw_data_line[11::2]
+        self.team2_stats = raw_data_line[12::2]
 
-        # on penalties score is the only info
+        self.predicted_result = None
 
-        self.team1_score = [half1[4], half2[4], extra[4], penalties[4]]
-        self.team2_score = [half1[5], half2[5], extra[5], penalties[5]]
+        # determine the game type
+        self.is_unknown = pandas.isna(self.team1_name) or pandas.isna(self.team2_name)
+        self.is_unplayed = any(pandas.isna(x) for x in self.team1_stats + self.team2_stats)
+        self.is_played = not(self.is_unknown or self.is_unplayed)
 
-        self.team1_output = VectorizationTools.VectorizationMethod(half1[4])
-        self.team2_output = VectorizationTools.VectorizationMethod(half1[5])
-        self.team1_output.extend(VectorizationTools.VectorizationMethod(half2[4]))
-        self.team2_output.extend(VectorizationTools.VectorizationMethod(half2[5]))
-        self.team1_output.extend(VectorizationTools.VectorizationMethod(extra[4]))
-        self.team2_output.extend(VectorizationTools.VectorizationMethod(extra[5]))
-        self.team1_output.extend(VectorizationTools.VectorizationMethod(penalties[4]))
-        self.team2_output.extend(VectorizationTools.VectorizationMethod(penalties[5]))
+        if self.is_played:
+            # vectorize results
+            self.team1_output = NetworkTools.vectorized_result(raw_data_line[3])
+            self.team2_output = NetworkTools.vectorized_result(raw_data_line[4])
+            self.team1_output.extend(NetworkTools.vectorized_result(raw_data_line[5]))
+            self.team2_output.extend(NetworkTools.vectorized_result(raw_data_line[6]))
+            self.team1_output.extend(NetworkTools.vectorized_result(raw_data_line[7]))
+            self.team2_output.extend(NetworkTools.vectorized_result(raw_data_line[8]))
+            self.team1_output.extend(NetworkTools.vectorized_result(raw_data_line[9]))
+            self.team2_output.extend(NetworkTools.vectorized_result(raw_data_line[10]))
 
     def add_team_reference(self, teams):
-        self.team1 = list(filter(lambda x: x.name == self.team1_name, teams))[0]
-        self.team2 = list(filter(lambda x: x.name == self.team2_name, teams))[0]
+        if not self.is_unknown:
+            self.team1 = list(filter(lambda x: x.name == self.team1_name, teams))[0]
+            self.team2 = list(filter(lambda x: x.name == self.team2_name, teams))[0]
 
     def reverse_teams(self):
-        placeholder = self.team1_name
-        self.team1_name = self.team2_name
-        self.team2_name = placeholder
-        placeholder = self.team1_stats
-        self.team1_stats = self.team2_stats
-        self.team2_stats = placeholder
-        placeholder = self.team1_score
-        self.team1_score = self.team2_score
-        self.team2_score = placeholder
-
+        if self.is_unknown:
+            raise NotImplementedError
+        
+        if self.is_unplayed:
+            placeholder = self.team1_name
+            self.team1_name = self.team2_name
+            self.team2_name = placeholder
+            placeholder = self.team1
+            self.team1 = self.team2
+            self.team2 = placeholder
+            
+        if self.is_played:
+            placeholder = self.team1_name
+            self.team1_name = self.team2_name
+            self.team2_name = placeholder
+            placeholder = self.team1_stats
+            self.team1_stats = self.team2_stats
+            self.team2_stats = placeholder
+            placeholder = self.team1_score
+            self.team1_score = self.team2_score
+            self.team2_score = placeholder
+            placeholder = self.team1_output
+            self.team1_output = self.team2_output
+            self.team2_output = placeholder
+            placeholder = self.team1
+            self.team1 = self.team2
+            self.team2 = placeholder
+            
     def print(self):
         return "(" + self.phase + " " + self.team1_name + "-" + self.team2_name + ")"

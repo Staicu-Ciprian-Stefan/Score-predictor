@@ -1,6 +1,10 @@
-import GeneralPredictor
+# standard libraries
+
+# 3rd party libraries
+
+# my libraries
 
 
-class PredictByTournament(GeneralPredictor.GeneralPredictor):
+class PredictByTournament():
     def get_network_parameters():
         return -1
