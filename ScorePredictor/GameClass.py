@@ -5,18 +5,18 @@ import pandas
 # 3rd party libraries
 
 # my libraries
-import NetworkTools
+import ScoreClass
 
 class Game:
     # format must be kept with team12, score12, stats12 for reverse purposes
     def get_stats(self):
-        return self.team1_stats + self.team2_stats + self.team1_output + self.team2_output
+        return self.team1_stats + self.team2_stats + self.score.get_output()
         
     def get_input(self, phase = None):
         return self.team1.get_stats(phase) + self.team1.get_stats(phase)
     
     def get_output(self):
-        return self.team1_output + self.team2_output
+        return self.score.get_output()
 
     def get_csv_format(self):
         return [self.phase, self.team1_name, self.team2_name]
@@ -28,29 +28,21 @@ class Game:
         self.team1_name = raw_data_line[1]
         self.team2_name = raw_data_line[2]
         
-        self.team1_score = raw_data_line[3:10:2]
-        self.team2_score = raw_data_line[4:11:2]
+        # self.team1_score = raw_data_line[3:10:2]
+        # self.team2_score = raw_data_line[4:11:2]
 
         self.team1_stats = raw_data_line[11::2]
         self.team2_stats = raw_data_line[12::2]
-
-        self.predicted_result = None
 
         # determine the game type
         self.is_unknown = pandas.isna(self.team1_name) or pandas.isna(self.team2_name)
         self.is_unplayed = any(pandas.isna(x) for x in self.team1_stats + self.team2_stats)
         self.is_played = not(self.is_unknown or self.is_unplayed)
 
+        self.score = -1
+        self.predicted_score = None
         if self.is_played:
-            # vectorize results
-            self.team1_output = NetworkTools.vectorized_result(raw_data_line[3])
-            self.team2_output = NetworkTools.vectorized_result(raw_data_line[4])
-            self.team1_output.extend(NetworkTools.vectorized_result(raw_data_line[5]))
-            self.team2_output.extend(NetworkTools.vectorized_result(raw_data_line[6]))
-            self.team1_output.extend(NetworkTools.vectorized_result(raw_data_line[7]))
-            self.team2_output.extend(NetworkTools.vectorized_result(raw_data_line[8]))
-            self.team1_output.extend(NetworkTools.vectorized_result(raw_data_line[9]))
-            self.team2_output.extend(NetworkTools.vectorized_result(raw_data_line[10]))
+            self.score = ScoreClass.Score(raw_data_line[3:11])
 
     def add_team_reference(self, teams):
         if not self.is_unknown:
@@ -73,18 +65,16 @@ class Game:
             placeholder = self.team1_name
             self.team1_name = self.team2_name
             self.team2_name = placeholder
+
             placeholder = self.team1_stats
             self.team1_stats = self.team2_stats
             self.team2_stats = placeholder
-            placeholder = self.team1_score
-            self.team1_score = self.team2_score
-            self.team2_score = placeholder
-            placeholder = self.team1_output
-            self.team1_output = self.team2_output
-            self.team2_output = placeholder
+
             placeholder = self.team1
             self.team1 = self.team2
             self.team2 = placeholder
+
+            self.score.reverse_teams()
             
     def print(self):
         return "(" + self.phase + " " + self.team1_name + "-" + self.team2_name + ")"

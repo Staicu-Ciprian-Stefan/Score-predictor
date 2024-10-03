@@ -78,7 +78,7 @@ def read_data(file_name, sheet_name):
              
     # check data for consistency
     team_stats_length = len(games[0].team1_stats)
-    team_score_length = 40 # this is constant
+    team_score_length = 60 # this is constant
 
     for game in games:
         if game.is_played:
@@ -92,13 +92,13 @@ def read_data(file_name, sheet_name):
                 team_stats_length,
                 game.print(),
             )
-            assert len(game.team1_output) == team_score_length, "Invalid shape %d, expected %d, for team1_output of game %s" % (
-                len(game.team1_output),
+            assert len(game.score.team1_score.output) == team_score_length, "Invalid shape %d, expected %d, for team1_output of game %s" % (
+                len(game.score.team1_score.output),
                 team_score_length,
                 game.print(),
             )
-            assert len(game.team2_output) == team_score_length, "Invalid shape %d, expected %d, for team2_output of game %s" % (
-                len(game.team2_output),
+            assert len(game.score.team2_score.output) == team_score_length, "Invalid shape %d, expected %d, for team2_output of game %s" % (
+                len(game.score.team2_score.output),
                 team_score_length,
                 game.print(),
             )

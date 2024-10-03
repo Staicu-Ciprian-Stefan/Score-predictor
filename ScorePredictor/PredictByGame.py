@@ -8,6 +8,7 @@ import pandas as pd
 import Network2
 import NetworkTools
 import GlobalParameters
+import ScoreClass
 
 class PredictByGame:
     def __init__(self):
@@ -20,7 +21,7 @@ class PredictByGame:
 
         # get size
         input_size = len(games[0].team1.get_stats(phases[0])) * 2
-        output_size = 80
+        output_size = 122
 
         # instead of reversing the games we will go over each team and its games
         # this way each game will automatically be considered twice, with teams reversed
@@ -84,7 +85,7 @@ class PredictByGame:
 
             # get size
             input_size = len(games[0].team1.get_stats(predicted_phase)) * 2
-            output_size = 80
+            output_size = 122
 
             # instead of reversing the games we will go over each team and its games
             # this way each game will automatically be considered twice, with teams reversed
@@ -159,13 +160,13 @@ class PredictByGame:
         for game in games:
             if game.phase == phases[1]:
                 input_data = numpy.array(game.get_input()).reshape(input_size, 1)
-                game.predicted_result = self.net.feedforward(input_data)
+                game.predicted_score = ScoreClass.Score(self.net.feedforward(input_data))
                 predictions.append(game.get_csv_format() + [item[0] for item in self.net.feedforward(input_data)])
 
         # output to excel
         # columns = ['Phase', 'Team1', 'Team2', 'T1_r1', 'T1_final', 'T1_extra', 'T1_penalties', 'T2_r1', 'T2_final', 'T2_extra', 'T2_penalties']
         # df = pd.DataFrame([game.get_csv_format() for game in games])
-        df = pd.DataFrame(predictions, columns = GlobalParameters.columns)
+        df = pd.DataFrame(predictions, columns = GlobalParameters.get_columns())
         df.to_csv("Output.csv", index = False)
 
     def get_results(self, phases, games):
